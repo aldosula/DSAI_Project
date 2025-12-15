@@ -3,6 +3,13 @@ import glob
 import pandas as pd
 import torch
 import torchaudio
+
+# Set backend to soundfile to avoid torchcodec errors
+try:
+    torchaudio.set_audio_backend("soundfile")
+except:
+    pass  # Older versions don't have this
+
 import random
 import numpy as np
 from torch.utils.data import Dataset
@@ -102,40 +109,53 @@ class BioacousticDataset(Dataset):
         num_frames = int(self.segment_len * self.sample_rate)
         
         try:
-            # Get file info to check length (torchaudio 2.0+ compatible)
-            metadata = torchaudio.backend.soundfile_backend.info(wav_path)
-            file_frames = metadata.num_frames
-            file_sr = metadata.sample_rate
+            # For torchaudio 0.13.x, just load the segment directly
+            # Calculate frame offsets
+            orig_frame_offset = int(seg_start * self.sample_rate)
+            orig_num_frames = int(self.segment_len * self.sample_rate)
             
-            # Adjust if SR differs (we should probably resample after loading, but loading partial with different SR is tricky)
-            # For simplicity, load a bit more and resample, or assume SR is close/same.
-            # The prompt says "Use 22.05 kHz or 24 kHz".
-            # Let's assume we load, then resample.
-            
-            # If we need to resample, we can't rely on frame indices directly mapping.
-            # Safer: Load the whole file? No, too slow.
-            # Load with some buffer?
-            
-            # Let's try to load the segment. If SR is different, we need to adjust offsets.
-            orig_frame_offset = int(seg_start * file_sr)
-            orig_num_frames = int(self.segment_len * file_sr)
-            
-            waveform, sr = torchaudio.load(wav_path, frame_offset=orig_frame_offset, num_frames=orig_num_frames, backend="soundfile")
+            # Try to load with frame_offset first
+            try:
+                waveform, sr = torchaudio.load(
+                    wav_path, 
+                    frame_offset=orig_frame_offset, 
+                    num_frames=orig_num_frames
+                )
+                
+                # Check if waveform is empty (happens when offset is beyond file length)
+                if waveform.numel() == 0:
+                    raise ValueError("Empty waveform loaded")
+                    
+            except:
+                # Fallback: load entire file and extract segment
+                waveform, sr = torchaudio.load(wav_path)
+                
+                # Extract the desired segment
+                start_frame = int(seg_start * sr)
+                end_frame = start_frame + int(self.segment_len * sr)
+                
+                # Clamp to file bounds
+                start_frame = max(0, min(start_frame, waveform.shape[1] - 1))
+                end_frame = min(waveform.shape[1], start_frame + int(self.segment_len * sr))
+                
+                waveform = waveform[:, start_frame:end_frame]
             
             # Convert to mono
             if waveform.shape[0] > 1:
                 waveform = torch.mean(waveform, dim=0, keepdim=True)
             
+            # Resample if needed
             if sr != self.sample_rate:
                 resampler = torchaudio.transforms.Resample(sr, self.sample_rate)
                 waveform = resampler(waveform)
                 
-            # Pad if necessary (e.g. if near end of file)
-            if waveform.shape[1] < num_frames:
-                pad_amt = num_frames - waveform.shape[1]
+            # Ensure correct length (pad or trim)
+            target_frames = int(self.segment_len * self.sample_rate)
+            if waveform.shape[1] < target_frames:
+                pad_amt = target_frames - waveform.shape[1]
                 waveform = torch.nn.functional.pad(waveform, (0, pad_amt))
             else:
-                waveform = waveform[:, :num_frames]
+                waveform = waveform[:, :target_frames]
                 
             return waveform
             

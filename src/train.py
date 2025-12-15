@@ -8,6 +8,7 @@ from src.model import PrototypicalNetwork
 import argparse
 import random
 import numpy as np
+from tqdm import tqdm
 
 def train(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -77,7 +78,11 @@ def train(args):
         total_loss = 0
         total_acc = 0
         
-        for i, (support, support_labels, query, query_labels) in enumerate(train_loader):
+        # Wrap training loop with tqdm progress bar
+        train_pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{args.epochs} [Train]", 
+                          bar_format='{l_bar}{bar:30}{r_bar}{bar:-10b}')
+        
+        for i, (support, support_labels, query, query_labels) in enumerate(train_pbar):
             # Shapes: (1, N*K, ...), (1, N*K), ...
             support = support.squeeze(0).to(device)
             query = query.squeeze(0).to(device)
@@ -115,29 +120,55 @@ def train(args):
             acc = (preds == query_labels).float().mean()
             total_acc += acc.item()
             
+            # Update progress bar with current metrics
+            current_loss = total_loss / (i + 1)
+            current_acc = total_acc / (i + 1)
+            train_pbar.set_postfix({
+                'loss': f'{current_loss:.4f}',
+                'acc': f'{current_acc:.4f}'
+            })
+            
         avg_loss = total_loss / len(train_loader)
         avg_acc = total_acc / len(train_loader)
         
         # Validation
         model.eval()
-        val_loss = 0
-        val_acc = 0
+        val_loss = 0.0
+        val_correct = 0
+        val_total = 0
+        
+        # Wrap validation dataloader with tqdm
+        val_pbar = tqdm(val_loader, desc=f"Validation", 
+                        bar_format='{l_bar}{bar:30}{r_bar}{bar:-10b}')
         
         with torch.no_grad():
-            for i, (support, support_labels, query, query_labels) in enumerate(val_loader):
-                support = support.squeeze(0).to(device)
-                query = query.squeeze(0).to(device)
-                query_labels = query_labels.squeeze(0).to(device)
+            for i, (support, support_labels, query, query_labels) in enumerate(val_pbar):
+                support = support.squeeze(0).to(device) # Added squeeze(0) back
+                support_labels = support_labels.squeeze(0).to(device) # Added squeeze(0) back
+                query = query.squeeze(0).to(device) # Added squeeze(0) back
+                query_labels = query_labels.squeeze(0).to(device) # Added squeeze(0) back
                 
+                # Apply feature extraction, as in training loop
                 support = transform(support)
                 query = transform(query)
                 
                 logits = model(support, query, args.n_way, args.n_support, args.n_query)
+                logits = logits.view(args.n_way * args.n_query, args.n_way)
+                
                 loss = criterion(logits, query_labels)
                 
                 val_loss += loss.item()
-                _, preds = torch.max(logits, 1)
-                val_acc += (preds == query_labels).float().mean()
+                _, predicted = torch.max(logits, 1)
+                val_total += query_labels.size(0)
+                val_correct += (predicted == query_labels).sum().item()
+                
+                # Update progress bar
+                current_val_loss = val_loss / (i + 1)
+                current_val_acc = 100 * val_correct / val_total
+                val_pbar.set_postfix({
+                    'loss': f'{current_val_loss:.4f}',
+                    'acc': f'{current_val_acc:.2f}%'
+                })
                 
         avg_val_loss = val_loss / len(val_loader)
         avg_val_acc = val_acc / len(val_loader)

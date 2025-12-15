@@ -10,8 +10,8 @@ cd /export/home/4sula/DSAI_Final_Project/DSAI_Project
 
 # Activate environment
 echo ""
-echo "1. Activating virtual environment..."
-source ../venv/bin/activate
+echo "1. Activating shared virtual environment..."
+source /data/msc-proj/sppc18_venv/bin/activate
 
 # Show environment info
 echo "   ✓ Virtual environment activated"

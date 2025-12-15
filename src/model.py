@@ -1,13 +1,14 @@
 import torch
 import torch.nn as nn
-import torchvision.models as models
+from torchvision.models import mobilenet_v3_small, MobileNet_V3_Small_Weights
 
 class EmbeddingNet(nn.Module):
-    def __init__(self, backbone='mobilenet_v3_small', pretrained=True, input_channels=1):
+    def __init__(self, backbone='mobilenet_v3_small', weights=None, input_channels=1):
         super(EmbeddingNet, self).__init__()
         
         if backbone == 'mobilenet_v3_small':
-            self.backbone = models.mobilenet_v3_small(pretrained=pretrained)
+            # Use weights parameter instead of deprecated pretrained
+            self.backbone = mobilenet_v3_small(weights=weights)
             # Modify first layer for input channels (usually 1 for spectrogram)
             if input_channels != 3:
                 old_conv = self.backbone.features[0][0]
@@ -44,9 +45,9 @@ class EmbeddingNet(nn.Module):
         return self.backbone(x)
 
 class PrototypicalNetwork(nn.Module):
-    def __init__(self, backbone='mobilenet_v3_small', pretrained=True):
+    def __init__(self, backbone='mobilenet_v3_small', weights=MobileNet_V3_Small_Weights.DEFAULT):
         super(PrototypicalNetwork, self).__init__()
-        self.encoder = EmbeddingNet(backbone, pretrained)
+        self.encoder = EmbeddingNet(backbone, weights)
         
     def forward(self, support_set, query_set, n_way, n_support, n_query):
         """

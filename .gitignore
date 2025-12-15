@@ -87,3 +87,4 @@ dmypy.json
 *.tmp
 tmp/
 temp/
+python3.11 -m venv /data/msc-proj/shared_venv

@@ -2,7 +2,7 @@
 
 Python 3.11 compatible implementation of Prototypical Networks for few-shot bioacoustic sound event detection.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 DSAI_Project/
@@ -18,7 +18,7 @@ DSAI_Project/
 └── README.md               # This file
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Setup Environment
 
@@ -26,8 +26,8 @@ DSAI_Project/
 # Navigate to project root
 cd /export/home/4sula/DSAI_Final_Project
 
-# Activate virtual environment
-source venv/bin/activate
+# Activate shared virtual environment (located in group storage)
+source /data/msc-proj/sppc18_venv/bin/activate
 
 # Install dependencies (if not already installed)
 cd DSAI_Project
@@ -167,7 +167,7 @@ Additional resources:
 **Issue:** Import errors  
 **Solution:** Ensure you're using the correct venv:
 ```bash
-source venv/bin/activate
+source /data/msc-proj/sppc18_venv/bin/activate
 ```
 
 ## 📚 References

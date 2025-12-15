@@ -5,8 +5,8 @@
 First, activate your virtual environment and install the required packages:
 
 ```bash
-# Activate the virtual environment
-source /export/home/4sula/DSAI_Final_Project/venv/bin/activate
+# Activate the shared virtual environment
+source /data/msc-proj/sppc18_venv/bin/activate
 
 # Navigate to the project directory
 cd /export/home/4sula/DSAI_Final_Project/DSAI_Project

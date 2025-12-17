@@ -171,7 +171,7 @@ def train(args):
                 })
                 
         avg_val_loss = val_loss / len(val_loader)
-        avg_val_acc = val_acc / len(val_loader)
+        avg_val_acc = val_correct / val_total  # Fixed: use val_correct/val_total instead of val_acc
         
         print(f"Epoch {epoch+1}/{args.epochs} - Train Loss: {avg_loss:.4f} Acc: {avg_acc:.4f} | Val Loss: {avg_val_loss:.4f} Acc: {avg_val_acc:.4f}")
         

@@ -1,0 +1,93 @@
+# Configuration for baseline model (Liu et al. logmelBase-Frame-Level)
+
+# Paths
+paths:
+  train_dir: "/data/msc-proj/Training_Set"
+  val_dir: "/data/msc-proj/Validation_Set_DSAI_2025_2026"
+  checkpoint_dir: "checkpoints"
+  log_dir: "logs"
+
+# Audio processing
+audio:
+  sample_rate: 22050
+  n_fft: 1024
+  hop_length: 256
+  win_length: 1024
+  n_mels: 128
+  fmin: 50
+  fmax: 11025
+  log_offset: 0.000001
+
+# Model architecture (baseline from paper)
+# Note: embed_dim=1024 per paper, channels is ignored for baseline model
+model:
+  embed_dim: 1024
+  num_blocks: 4
+  channels: [64, 64, 64, 64]
+  dropout: 0.1
+
+# Training (from paper Section 3.1)
+training:
+  epochs: 100
+  batch_size: 32
+  lr: 0.0003
+  weight_decay: 0.0
+  scheduler: "step"
+  scheduler_step: 10
+  scheduler_gamma: 0.5
+  warmup_epochs: 0
+  early_stop_patience: 10
+  num_workers: 4
+  class_balance: true
+  
+  # Augmentation
+  use_mixup: true
+  mixup_alpha: 0.4
+  # Feature type: "logmel" or "pcen"
+  feature_type: "logmel"
+  # SpecAugment parameters (Set to 0 to disable)
+  freq_mask_param: 0
+  time_mask_param: 0
+
+# Few-shot settings
+fewshot:
+  n_support: 5
+  support_context_s: 0.025
+
+# Adaptation (two-step fine-tuning from paper)
+adapt:
+  enabled: true
+  iterations: 1  # Disabled pseudo-labeling
+  finetune_lr: 0.001
+  finetune_layers: ["head", "block4", "block3"]
+  hard_neg_k: 100
+  pseudo_threshold: 0.5
+  pseudo_max_per_iter: 50
+  pseudo_min_spacing_s: 0.5
+
+# Inference
+inference:
+  chunk_duration_s: 30.0
+  chunk_overlap_s: 2.0
+  frame_hop_s: 0.01
+
+# Post-processing
+postprocess:
+  smooth_method: "median"
+  smooth_kernel_s: 0.1
+  threshold: 0.5
+  adaptive_threshold: false
+  min_event_s: 0.06
+  max_event_s: 0.5
+  merge_gap_s: 0.02
+  output_after_support_end: true
+
+# Evaluation
+eval:
+  onset_tolerance_s: 0.2
+  offset_tolerance_s: 0.2
+  min_iou: 0.0
+
+# Reproducibility
+seed: 42
+deterministic: true

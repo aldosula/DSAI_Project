@@ -1,0 +1,11 @@
+_target_: src.models.prototype_module.PrototypeModule
+train: ${train_param}
+path: ${path}
+features: ${features}
+eval: ${eval_param}
+
+net:
+  _target_: src.models.components.protonet_mamba.ResNetMamba
+  features: ${features}
+  use_mamba: true
+  mamba_layers: 2

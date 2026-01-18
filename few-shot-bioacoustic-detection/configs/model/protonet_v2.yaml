@@ -1,0 +1,11 @@
+_target_: src.models.prototype_module.PrototypeModule
+train: ${train_param}
+path: ${path}
+features: ${features}
+eval: ${eval_param}
+
+net:
+  _target_: src.models.components.protonet_v2.ResNetV2
+  features: ${features}
+  use_attention: true
+  attention_reduction: 16

@@ -1,0 +1,12 @@
+_target_: src.models.prototype_module.PrototypeModule
+train: ${train_param}
+path: ${path}
+features: ${features}
+eval: ${eval_param}
+
+net:
+  _target_: src.models.components.protonet_v3.ResNetV3
+  features: ${features}
+  weights_path: ${hydra:runtime.cwd}/weights/BEATs_iter3_plus_AS2M.pt
+  freeze_backbone: false
+  output_dim: 2048

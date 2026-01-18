@@ -1,0 +1,10 @@
+_target_: src.models.prototype_module.PrototypeModule
+train: ${train_param}
+path: ${path}
+features: ${features}
+eval: ${eval_param}
+
+net:
+  _target_: src.models.components.protonet_v4.ResNetV4
+  features: ${features}
+  se_reduction: 16

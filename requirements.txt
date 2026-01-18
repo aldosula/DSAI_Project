@@ -1,21 +1,39 @@
-# Deep Learning
-torch
-torchvision
-torchaudio
-torchcodec
+# Core Deep Learning
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+pytorch-lightning>=2.0.0
 
-# Data Processing
-numpy
-pandas
-scipy
-# Audio Processing
-librosa
-soundfile
+# Configuration & Logging
+hydra-core>=1.3.0
+hydra-colorlog>=1.2.0
+wandb>=0.15.0
+tensorboard>=2.13.0
+rich>=13.0.0
 
-# Visualization & Notebook
-jupyter
-matplotlib
-seaborn
+# Data Processing & Audio
+numpy>=1.23.0
+pandas>=1.5.0
+scipy>=1.10.0
+librosa>=0.10.0
+soundfile>=0.12.0
+h5py>=3.8.0
+einops>=0.6.0  # For tensor rearranging
 
-# Utilities
-tqdm
+# Mamba Dependencies
+mamba-ssm>=1.0.1  # Requires compatible CUDA version
+causal-conv1d>=1.0.0
+
+# Metrics & Utilities
+scikit-learn>=1.2.0
+matplotlib>=3.7.0
+tqdm>=4.65.0
+pesq>=0.0.4
+pystoi>=0.3.3
+sed_eval>=0.2.1
+
+# Optional/Dev
+pytest>=7.0.0
+black>=23.0.0
+isort>=5.0.0
+flake8>=6.0.0

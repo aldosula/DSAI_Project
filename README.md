@@ -1,6 +1,5 @@
 # DSAI Final Project: Few-Shot Bioacoustic Event Detection
 
-> **DCASE 2024 Task 5** — Detecting animal vocalizations with only 5 examples per class.
 
 This repository contains two complementary implementations for few-shot bioacoustic event detection, developed as part of the DSAI Final Project.
 

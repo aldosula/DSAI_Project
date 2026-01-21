@@ -88,20 +88,13 @@ Raw Audio (.wav) -> STFT -> Mel Filterbank -> Log/PCEN -> Spectrogram (T × 128)
 
 #### Phase 2: Episodic Training
 
-```mermaid
-graph TD
-    subgraph Episode["Each Training Episode"]
-        A["Sample N classes"] --> B["5 Support + 15 Query per class"]
-        B --> C["Encoder Network"]
-        C --> D["Support Embeddings (N×5×2048)"]
-        C --> E["Query Embeddings (N×15×2048)"]
-        D --> F["Class Prototypes (N×2048)"]
-        E --> G{"Euclidean Distance"}
-        F --> G
-        G --> H["Softmax -> Class Probabilities"]
-        H --> I["Cross-Entropy Loss"]
-    end
-```
+**Process Flow:**
+1.  **Episode Sampling:** Randomly sample $N$ classes (e.g., 5 or 10) for the episode.
+2.  **Support & Query Split:** For each class, select 5 support samples (to build the model) and 15 query samples (to test the model).
+3.  **Feature Encoding:** Pass all audio samples through the Encoder (ResNet/Transformer) to get embeddings.
+4.  **Prototype Calculation:** Compute the mean embedding (centroid) of the 5 support shots for each class.
+5.  **Classification:** Calculate the Euclidean distance from every query sample to every class prototype.
+6.  **Loss Optimization:** Minimize the distance to the correct class prototype (Cross-Entropy Loss).
 
 - **Episodes:** Random sampling of classes and examples each iteration
 - **Encoder:** CNN (ResNet/CBAM/SE) or Transformer (BEATs) or SSM (Mamba)

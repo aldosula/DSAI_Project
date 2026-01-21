@@ -13,15 +13,15 @@ pip install -r requirements.txt
 
 ### Training
 ```bash
-python scripts/train.py --config configs/default.yaml
+python scripts/train_baseline.py --config configs/default.yaml
 ```
 
 
 ### Batch Inference
 ```bash
-python scripts/infer.py \
-    --input_dir /data/msc-proj/Validation_Set_DSAI_2025_2026 \
-    --checkpoint checkpoints/best.pt \
+python scripts/infer_baseline.py \
+    --input_dir /data/msc-proj/Evaluation_Set_DSAI_2025_2026 \
+    --checkpoint /export/home/4sula/DSAI_Final_Project/DSAI_Project/logBase-Frame/checkpoints/best.pt \
     --output predictions/
 ```
 
@@ -29,43 +29,40 @@ python scripts/infer.py \
 ```bash
 python scripts/evaluate.py \
     --pred_dir predictions/ \
-    --gt_dir /data/msc-proj/Validation_Set_DSAI_2025_2026
+    --gt_dir /data/msc-proj/Evaluation_Set_DSAI_2025_2026
 ```
 
 ## Project Structure
 
 ```
-fsbed/
-├── fsbed/                 # Main package
-│   ├── config.py          # Configuration dataclasses
-│   ├── seed.py            # Reproducibility
-│   ├── logging_utils.py   # Logging setup
-│   ├── audio/             # Audio processing
-│   ├── data/              # Dataset utilities
-│   ├── models/            # Neural network models
-│   ├── adapt/             # Per-file adaptation
-│   ├── postprocess/       # Post-processing
-│   ├── eval/              # Evaluation metrics
-│   └── pipelines/         # Training/inference pipelines
+logBase-Frame/
+├── fsbed/                 # Core package
+│   ├── audio/             # Audio processing (Mel, PCEN)
+│   ├── models/            # Embedding networks
+│   ├── adapt/             # Pseudo-labeling logic
+│   └── postprocess/       # NMS, smoothing
 ├── scripts/               # CLI entry points
-├── configs/               # YAML configurations
-└── tests/                 # Unit tests
+└── configs/               # YAML configurations
 ```
 
 ## Configuration
 
-Key parameters in `configs/default.yaml`:
-- `sample_rate`: 22050 Hz
-- `n_mels`: 128 mel bins
-- `embed_dim`: 256 embedding dimension
-- `n_support`: 5 support examples
-- `adapt_iterations`: 3 pseudo-labeling rounds
+| Parameter | Description | Default |
+|:----------|:------------|:--------|
+| `sample_rate` | Audio sample rate | 22050 |
+| `n_mels` | Mel frequency bins | 128 |
+| `embed_dim` | Embedding dimension | 256 |
+| `n_support` | Support examples | 5 |
+| `adapt_iterations` | Pseudo-label rounds | 3 |
+
 
 ## Data Paths
 
 - **Training:** `/data/msc-proj/Training_Set`
 - **Validation:** `/data/msc-proj/Validation_Set_DSAI_2025_2026`
 
-## License
+- **Evaluation:** `/data/msc-proj/Evaluation_Set_DSAI_2025_2026`
 
-MIT
+**Checkpoint:** `/export/home/4sula/DSAI_Final_Project/DSAI_Project/logBase-Frame/checkpoints/best.pt`
+
+

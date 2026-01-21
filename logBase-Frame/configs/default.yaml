@@ -1,4 +1,4 @@
-# Configuration for baseline model (Liu et al. logmelBase-Frame-Level)
+# Configuration for baseline model
 
 # Paths
 paths:
@@ -18,15 +18,14 @@ audio:
   fmax: 11025
   log_offset: 0.000001
 
-# Model architecture (baseline from paper)
-# Note: embed_dim=1024 per paper, channels is ignored for baseline model
+# Model architecture
 model:
   embed_dim: 1024
   num_blocks: 4
   channels: [64, 64, 64, 64]
   dropout: 0.1
 
-# Training (from paper Section 3.1)
+# Training 
 training:
   epochs: 100
   batch_size: 32
@@ -41,7 +40,7 @@ training:
   class_balance: true
   
   # Augmentation
-  use_mixup: true
+  use_mixup: false
   mixup_alpha: 0.4
   # Feature type: "logmel" or "pcen"
   feature_type: "logmel"
@@ -54,10 +53,10 @@ fewshot:
   n_support: 5
   support_context_s: 0.025
 
-# Adaptation (two-step fine-tuning from paper)
+# Adaptation 
 adapt:
   enabled: true
-  iterations: 3  # Paper: repeat step1 and step2 multiple times
+  iterations: 3  
   finetune_lr: 0.001
   finetune_layers: ["head", "block4", "block3"]
   hard_neg_k: 100
@@ -75,12 +74,12 @@ inference:
 postprocess:
   smooth_method: "median"
   smooth_kernel_s: 0.15
-  threshold: 0.3  # Lowered from 0.5 for more detections
+  threshold: 0.3  
   adaptive_threshold: false
   min_event_s: 0.05
-  max_event_s: 2.0  # Increased from 0.5 to allow longer events
-  merge_gap_s: 0.1  # Increased to merge fragmented detections
-  output_after_support_end: false  # Disabled - validation set has spread support events
+  max_event_s: 2.0  
+  merge_gap_s: 0.1  
+  output_after_support_end: false  
 
 # Evaluation
 eval:

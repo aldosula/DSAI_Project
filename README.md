@@ -11,7 +11,7 @@ This repository contains two complementary implementations for few-shot bioacous
 | Codebase | Description | Key Features |
 |:---------|:------------|:-------------|
 | **[few-shot-bioacoustic-detection](few-shot-bioacoustic-detection/)** | Prototypical Network variants | ResNet, CBAM, BEATs, SE, Mamba encoders |
-| **[logBase-Frame](logBase-Frame/)** | Production-quality FSBED | Pseudo-labeling adaptation, modular design |
+| **[logBase-Frame](logBase-Frame/)** | LogBase-Frame | Pseudo-labeling adaptation, modular design |
 
 ---
 
@@ -32,15 +32,36 @@ source venv/bin/activate  # Linux/Mac
 # Install dependencies
 pip install -r requirements.txt
 
+# Or access directly from the shared venv on sppc18 server
+source /data/msc-proj/sppc18_venv/bin/activate
+
 # Train a model
 python train.py model=protonet           # Baseline
 python train.py model=protonet_v2        # CBAM Attention
-python train.py model=protonet_v3        # BEATs Transformer
+python train.py model=protonet_v3 \
+    model.net.weights_path="/export/home/4sula/DSAI_Final_Project/DSAI_Project/few-shot-bioacoustic-detection/weights/BEATs_iter3_plus_AS2M.pt"        # BEATs Transformer
 python train.py model=protonet_v4        # Squeeze-Excitation
 python train.py model=protonet_mamba     # Mamba (SSM)
 
-# Evaluate
-python eval.py ckpt_path=checkpoints/best.ckpt
+# Evaluate  CBAM Attention
+python train.py train=False test=True \
+    path.test_dir="/data/msc-proj/Evaluation_Set_DSAI_2025_2026" \
+    train_param.load_weight_from="/export/home/4sula/DSAI_Final_Project/DSAI_Project/few-shot-bioacoustic-detection/logs/experiments/runs/baseline/2026-01-17_13-09-08/checkpoints/epoch_003_val_acc_0.84.ckpt"
+
+# Evaluate  BEATs Transformer
+python train.py train=False test=True \
+    path.test_dir="/data/msc-proj/Evaluation_Set_DSAI_2025_2026" \
+    train_param.load_weight_from="/export/home/4sula/DSAI_Final_Project/DSAI_Project/few-shot-bioacoustic-detection/logs/experiments/runs/baseline/2026-01-17_14-40-07/checkpoints/epoch_003_val_acc_0.82.ckpt"
+
+# Evaluate  SE
+python train.py train=False test=True \
+    path.test_dir="/data/msc-proj/Evaluation_Set_DSAI_2025_2026" \
+    train_param.load_weight_from="/export/home/4sula/DSAI_Final_Project/DSAI_Project/few-shot-bioacoustic-detection/logs/experiments/runs/baseline/2026-01-17_13-50-09/checkpoints/epoch_001_val_acc_0.79.ckpt"
+
+# Evaluate  Mamba
+python train.py train=False test=True \
+    path.test_dir="/data/msc-proj/Evaluation_Set_DSAI_2025_2026" \
+    train_param.load_weight_from="/export/home/4sula/DSAI_Final_Project/DSAI_Project/few-shot-bioacoustic-detection/logs/experiments/runs/baseline/2026-01-17_13-50-09/checkpoints/epoch_004_val_acc_0.82.ckpt"
 ```
 
 ### Model Architectures
@@ -55,11 +76,11 @@ python eval.py ckpt_path=checkpoints/best.ckpt
 
 ### How It Works
 
-The system uses **Prototypical Networks** — a few-shot learning approach where classes are represented by the mean embedding (prototype) of their support examples.
+The system uses **Prototypical Networks** - a few-shot learning approach where classes are represented by the mean embedding (prototype) of their support examples.
 
 #### Phase 1: Feature Extraction
 ```
-Raw Audio (.wav) → STFT → Mel Filterbank → Log/PCEN → Spectrogram (T × 128)
+Raw Audio (.wav) -> STFT -> Mel Filterbank -> Log/PCEN -> Spectrogram (T × 128)
 ```
 - **Input:** Variable-length audio files (16kHz or 22kHz)
 - **Output:** 2D time-frequency representations (128 mel bins)
@@ -70,15 +91,15 @@ Raw Audio (.wav) → STFT → Mel Filterbank → Log/PCEN → Spectrogram (T × 
 ```mermaid
 graph TD
     subgraph Episode["Each Training Episode"]
-        A[Sample N classes] --> B[5 Support + 15 Query per class]
-        B --> C[Encoder Network]
+        A["Sample N classes"] --> B["5 Support + 15 Query per class"]
+        B --> C["Encoder Network"]
         C --> D["Support Embeddings (N×5×2048)"]
         C --> E["Query Embeddings (N×15×2048)"]
         D --> F["Class Prototypes (N×2048)"]
-        E --> G{Euclidean Distance}
+        E --> G{"Euclidean Distance"}
         F --> G
-        G --> H[Softmax → Class Probabilities]
-        H --> I[Cross-Entropy Loss]
+        G --> H["Softmax -> Class Probabilities"]
+        H --> I["Cross-Entropy Loss"]
     end
 ```
 
@@ -89,20 +110,11 @@ graph TD
 
 #### Phase 3: Inference & Evaluation
 
-```mermaid
-graph LR
-    subgraph Inference["Per-File Inference"]
-        A[5 Support Examples] --> B[Positive Prototype]
-        C[Query Audio Frames] --> D[Frame Embeddings]
-        E[Hard Negative Mining] --> F[Negative Prototype]
-        B --> G{Frame-wise Distance}
-        F --> G
-        D --> G
-        G --> H[Raw Predictions]
-        H --> I[NMS + Smoothing]
-        I --> J[Final Detections]
-    end
-```
+**Process Flow:**
+1.  **Extract Support Prototypes:** Compute the positive prototype from the 5 available support shots.
+2.  **Estimate Negative Prototype:** Use silence/background segments to estimate a "noise" prototype (Hard Negative Mining).
+3.  **Frame-wise Classification:** Compare every frame of the query audio to both the positive and negative prototypes using Euclidean distance.
+4.  **Post-Processing:** Apply Non-Maximum Suppression (NMS) and temporal smoothing to generate final start/end times.
 
 - **Positive Prototype:** Averaged embedding of 5 annotated support shots
 - **Negative Prototype:** Dynamically estimated from background segments
@@ -110,9 +122,9 @@ graph LR
 
 ---
 
-## 2. LogBase-Frame (Production FSBED)
+## 2. LogBase-Frame 
 
-Located in `logBase-Frame/`. A production-quality, modular implementation with pseudo-labeling adaptation.
+Located in `logBase-Frame/`. A modular implementation with pseudo-labeling adaptation.
 
 ### Quick Start
 
@@ -124,22 +136,22 @@ source /data/msc-proj/sppc18_venv/bin/activate  # Use shared venv
 # OR create your own:
 # python -m venv venv && source venv/bin/activate
 
-# Install
-pip install -r requirements.txt
+# Install dependencies ONLY if you have created a new venv
+# pip install -r requirements.txt
 
 # Train
-python scripts/train.py --config configs/default.yaml
+python scripts/train_baseline.py --config configs/default.yaml
 
 # Inference
-python scripts/infer.py \
-    --input_dir /path/to/audio \
-    --checkpoint checkpoints/best.pt \
+python scripts/infer_baseline.py \
+    --input_dir /data/msc-proj/Evaluation_Set_DSAI_2025_2026 \
+    --checkpoint /export/home/4sula/DSAI_Final_Project/DSAI_Project/logBase-Frame/checkpoints/best.pt \
     --output predictions/
 
 # Evaluate
 python scripts/evaluate.py \
     --pred_dir predictions/ \
-    --gt_dir /path/to/ground_truth
+    --gt_dir /data/msc-proj/Evaluation_Set_DSAI_2025_2026
 ```
 
 ### Key Features
@@ -193,6 +205,13 @@ logBase-Frame/
 |:--------|:-----|
 | Training Set | `/data/msc-proj/Training_Set` |
 | Validation Set | `/data/msc-proj/Validation_Set_DSAI_2025_2026` |
+| Evaluation Set | `/data/msc-proj/Evaluation_Set_DSAI_2025_2026` |
+| BEATs Pretrained Weights | `/export/home/4sula/DSAI_Final_Project/DSAI_Project/few-shot-bioacoustic-detection/weights/BEATs_iter3_plus_AS2M.pt` |
+| Baseline checkpoint | `/export/home/4sula/DSAI_Final_Project/DSAI_Project/few-shot-bioacoustic-detection/logs/experiments/runs/baseline/2026-01-17_11-36-41/checkpoints/epoch_004_val_acc_0.67.ckpt` |
+| CBAM checkpoint | `/export/home/4sula/DSAI_Final_Project/DSAI_Project/few-shot-bioacoustic-detection/logs/experiments/runs/baseline/2026-01-17_13-09-08/checkpoints/epoch_003_val_acc_0.84.ckpt` |
+| BEATs checkpoint | `/export/home/4sula/DSAI_Final_Project/DSAI_Project/few-shot-bioacoustic-detection/logs/experiments/runs/baseline/2026-01-17_14-40-07/checkpoints/epoch_003_val_acc_0.82.ckpt` |
+| SE checkpoint | `/export/home/4sula/DSAI_Final_Project/DSAI_Project/few-shot-bioacoustic-detection/logs/experiments/runs/baseline/2026-01-17_13-50-09/checkpoints/epoch_001_val_acc_0.79.ckpt` |
+| Mamba checkpoint | `/export/home/4sula/DSAI_Final_Project/DSAI_Project/few-shot-bioacoustic-detection/logs/experiments/runs/baseline/2026-01-17_13-50-09/checkpoints/epoch_004_val_acc_0.82.ckpt` |
 
 ---
 
@@ -205,7 +224,7 @@ logBase-Frame/
 | V3 (BEATs) | 12.8% | 14.1% | **13.4%** | Transfer learning from AudioSet |
 | V4 (SE) | 26.8% | 24.3% | **25.5%** | Squeeze-Excitation (3.8M params) |
 | Mamba | 9.1% | 19.0% | **12.3%** | Requires more training epochs |
-| LogBase-Frame | — | — | — | Production pipeline |
+| LogBase-Frame | 3.06% | 1.71% | **1.65%** |  |
 
 
 
@@ -236,7 +255,3 @@ DSAI_Project/
 - [Mamba: Linear-Time Sequence Modeling](https://github.com/state-spaces/mamba)
 
 ---
-
-## License
-
-MIT

@@ -129,11 +129,11 @@ def train_baseline(config: Config) -> nn.Module:
     class_weights = full_dataset.get_class_weights().to(device)
     criterion = nn.CrossEntropyLoss(weight=class_weights)
     
-    # Optimizer - Adam with lr=0.0003 (from paper)
+    # Optimizer 
     lr = getattr(config.training, 'lr', 0.0003)
     optimizer = optim.Adam(model.parameters(), lr=lr)
     
-    # Scheduler - StepLR with gamma=0.5, step_size=10 (from paper)
+    # Scheduler 
     scheduler = optim.lr_scheduler.StepLR(
         optimizer, 
         step_size=getattr(config.training, 'scheduler_step', 10),
@@ -247,7 +247,7 @@ def train_baseline(config: Config) -> nn.Module:
         
         scheduler.step()
         
-        # Save best model by accuracy (as per paper)
+        # Save best model by accuracy 
         if val_acc > best_val_acc:
             best_val_acc = val_acc
             patience_counter = 0

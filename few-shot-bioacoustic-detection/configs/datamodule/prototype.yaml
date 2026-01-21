@@ -1,6 +1,6 @@
 _target_: src.datamodules.prototype_datamodule.PrototypeDataModule
 
-data_dir: ${data_dir} # data_dir is specified in config.yaml
+data_dir: ${data_dir} 
 train_param: ${train_param}
 eval_param: ${eval_param}
 path: ${path}

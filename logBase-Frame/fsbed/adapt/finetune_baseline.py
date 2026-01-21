@@ -1,6 +1,6 @@
-"""Two-step fine-tuning for baseline model (Liu et al. paper).
+"""Two-step fine-tuning 
 
-Implements the paper's per-file adaptation strategy (Figure 3):
+Implements: 
 1. Step 1: Joint training of FC(1024,20) + FC(1024,2)
    - FC(1024,20): Multi-class head for regularization (keeps backbone features sharp)
    - FC(1024,2): Binary head for target species detection
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 class DualHeadAdapter(nn.Module):
     """
-    Dual-head adapter for Step 1 fine-tuning (per paper Figure 3).
+    Dual-head adapter for Step 1 fine-tuning.
     
     Combines:
     - FC(embed_dim, 20): Multi-class head from pretraining (regularization)
@@ -88,10 +88,7 @@ def get_inter_segment_negatives(
 ) -> torch.Tensor:
     """
     Get negative frame indices from regions between support events.
-    
-    This matches the paper's approach: "the four segments between two 
-    positive samples are selected as negative set."
-    
+
     Args:
         num_frames: Total number of frames.
         support_frames: Sorted list of support event center frames.
@@ -139,7 +136,7 @@ def two_step_finetune(
     pretrained_classifier: Optional[nn.Linear] = None,
 ) -> Tuple[DualHeadAdapter, torch.Tensor]:
     """
-    Two-step fine-tuning per file (Liu et al. paper Figure 3).
+    Two-step fine-tuning per file
     
     Step 1: Joint training of dual heads
     - Binary head: Pos (support) vs Neg (inter-segment)
@@ -182,8 +179,7 @@ def two_step_finetune(
     support_frames_list = support_frames.tolist()
     support_end_frame = max(support_frames_list) + margin_frames
     
-    # PAPER: "the four segments BETWEEN two positive samples are selected as negative set"
-    # This is the key difference from DCASE baseline - we use inter-segment negatives
+
     neg_frames = get_inter_segment_negatives(
         num_frames, 
         support_frames_list,
@@ -225,9 +221,7 @@ def two_step_finetune(
     neg_proto = neg_emb.mean(dim=0)
     adapter.init_binary_from_prototypes(pos_proto, neg_proto)
     
-    # Optimizer - different LRs for different parts
-    # Multi-class head: lower LR (regularization, don't want to change much)
-    # Binary head: higher LR (needs to learn new class quickly)
+    # Optimizer
     optimizer = optim.Adam([
         {'params': adapter.multiclass_head.parameters(), 'lr': 0.0001},
         {'params': adapter.binary_head.parameters(), 'lr': 0.001},
@@ -275,14 +269,10 @@ def two_step_finetune(
         binary_loss = F.cross_entropy(binary_logits, binary_labels)
         
         # Multi-class loss (regularization)
-        # For regularization, we just ensure the multiclass head stays active
-        # by classifying positive frames as "unknown" (class 0) or similar
-        # This prevents the backbone from overfitting to just the binary task
         multiclass_logits = adapter.forward_multiclass(batch_emb)
-        # Use entropy regularization: encourage confident predictions
         multiclass_probs = F.softmax(multiclass_logits, dim=-1)
         entropy = -(multiclass_probs * torch.log(multiclass_probs + 1e-8)).sum(dim=-1).mean()
-        multiclass_loss = -entropy  # Minimize negative entropy = maximize confidence
+        multiclass_loss = -entropy
         
         # Total loss
         total_loss = binary_weight * binary_loss + multiclass_weight * multiclass_loss

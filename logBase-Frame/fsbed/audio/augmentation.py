@@ -1,6 +1,6 @@
 """Data augmentation for audio spectrograms.
 
-Implements Mixup and SpecAugment as described in the Liu et al. paper.
+Implements Mixup and SpecAugment.
 """
 
 import random
@@ -21,7 +21,6 @@ def mixup(
     Mixup data augmentation.
     
     Interpolates inputs and targets from two samples.
-    Reference: Zhang et al. "mixup: Beyond Empirical Risk Minimization"
     
     Args:
         x1: First input tensor.
@@ -81,7 +80,6 @@ class SpecAugment:
     SpecAugment data augmentation for spectrograms.
     
     Applies frequency and time masking.
-    Reference: Park et al. "SpecAugment: A Simple Data Augmentation Method"
     """
     
     def __init__(

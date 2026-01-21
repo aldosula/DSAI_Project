@@ -1,4 +1,4 @@
-"""Configuration dataclasses for FSBED."""
+"""Configuration dataclasses."""
 
 from dataclasses import dataclass, field
 from pathlib import Path

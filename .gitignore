@@ -47,12 +47,13 @@ output/
 output_verify/
 test_checkpoints/
 test_logs/
+wandb/
+latest-run/
 
 # TensorBoard
 events.out.tfevents.*
 
-# Data (don't commit large datasets)
-data/
+# Data 
 *.wav
 *.mp3
 *.mp4
@@ -87,4 +88,3 @@ dmypy.json
 *.tmp
 tmp/
 temp/
-python3.11 -m venv /data/msc-proj/shared_venv

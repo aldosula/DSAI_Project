@@ -48,7 +48,6 @@ class TestLogMelExtractor:
 
     def test_output_frames_calculation(self):
         extractor = LogMelExtractor(n_fft=1024, hop_length=256)
-        # For 22050 samples with n_fft=1024, hop=256
         frames = extractor.get_output_frames(22050)
         assert frames > 0
 
@@ -82,7 +81,6 @@ class TestFrameConversions:
         frame = time_to_frame_idx(original_time, hop_length, sample_rate)
         recovered_time = frame_idx_to_time(frame, hop_length, sample_rate)
 
-        # Should be close (within one frame duration)
         assert abs(recovered_time - original_time) < hop_length / sample_rate
 
 

@@ -99,7 +99,7 @@ train_param:
   sr: 22050
   seg_len: 0.2
   n_shot: 5
-  k_way: 10
+  k_way: 15
   device: cuda
   lr_rate: 0.001
   scheduler_gamma: 0.65

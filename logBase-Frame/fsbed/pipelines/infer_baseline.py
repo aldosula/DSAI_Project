@@ -1,4 +1,4 @@
-"""Inference pipeline for baseline model (Liu et al. paper)."""
+"""Inference pipeline for baseline model"""
 
 import logging
 from pathlib import Path
@@ -181,7 +181,7 @@ def infer_baseline_single_file(
         support_frames.append(center_frame)
     support_frames = torch.tensor(support_frames, device=device)
     
-    # Two-step fine-tuning with dual heads (paper Figure 3)
+    # Two-step fine-tuning with dual heads 
     adapter, probs = two_step_finetune(
         backbone,
         embeddings,

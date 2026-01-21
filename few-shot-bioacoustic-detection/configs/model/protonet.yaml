@@ -7,4 +7,3 @@ eval: ${eval_param}
 net:
   _target_: src.models.components.protonet.ResNet
   features: ${features}
-  # _target_: src.models.components.protonet_old.Protonet

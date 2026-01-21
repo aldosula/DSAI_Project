@@ -5,9 +5,8 @@ wandb:
   project: "debug_dcase_task5"
   name: "dynamic"
   save_dir: "."
-  offline: False # set True to store all logs only locally
-  id: null # pass correct id to resume experiment!
-  # entity: ""  # set to name of your wandb team
+  offline: False 
+  id: null 
   log_model: True
   prefix: ""
   job_type: "train"

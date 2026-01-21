@@ -1,7 +1,6 @@
-"""Baseline embedding network from Liu et al. DCASE2024 paper.
+"""Baseline embedding network
 
 Architecture: 2 BasicBlocks + 2 CNN layers.
-This is the logmelBase-Frame-Level model that achieved F1=70.56%.
 """
 
 import logging
@@ -87,7 +86,7 @@ class CNNBlock(nn.Module):
 
 class BaselineEmbedding(nn.Module):
     """
-    Baseline embedding network from Liu et al. paper (Table 2).
+    Baseline embedding network.
     
     Architecture:
     - BasicBlock1: 1 -> 64 channels
@@ -112,12 +111,12 @@ class BaselineEmbedding(nn.Module):
         self.embed_dim = embed_dim
         
         # 2 BasicBlocks
-        self.block1 = BasicBlock(1, channels, stride=2)  # Downsample freq
-        self.block2 = BasicBlock(channels, channels, stride=2)  # Downsample freq
+        self.block1 = BasicBlock(1, channels, stride=2)
+        self.block2 = BasicBlock(channels, channels, stride=2)
         
         # 2 CNN blocks
-        self.block3 = CNNBlock(channels, channels, stride=2)  # Downsample freq
-        self.block4 = CNNBlock(channels, channels, stride=1)  # Keep resolution
+        self.block3 = CNNBlock(channels, channels, stride=2)
+        self.block4 = CNNBlock(channels, channels, stride=1)  
         
         # Global average pooling over frequency
         self.global_pool = nn.AdaptiveAvgPool2d((1, None))
@@ -145,7 +144,7 @@ class BaselineEmbedding(nn.Module):
         return cls(
             n_mels=n_mels,
             embed_dim=config.embed_dim,
-            channels=64,  # Fixed at 64 per paper
+            channels=64,
         )
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -177,9 +176,9 @@ class BaselineEmbedding(nn.Module):
     def get_layer_groups(self) -> dict:
         """Get layer groups for differential learning rates during fine-tuning."""
         return {
-            "early": [self.block1, self.block2],  # Freeze or low LR
-            "late": [self.block3, self.block4],   # Higher LR (0.0001)
-            "fc": [self.fc],                       # Highest LR (0.001)
+            "early": [self.block1, self.block2],
+            "late": [self.block3, self.block4],
+            "fc": [self.fc],
         }
 
 

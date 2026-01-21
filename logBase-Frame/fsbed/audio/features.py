@@ -149,9 +149,7 @@ class PCENExtractor(nn.Module):
     PCEN(t, f) = (E(t, f) / (M(t, f) + eps)) ^ alpha + delta
     M(t, f) = (1 - s) * M(t-1, f) + s * E(t, f)
     
-    References:
-        db.audio.features.pcen in DCASE baselines
-        Wang et al. 2017 "Trainable Frontend For Robust and Far-Field Keyword Spotting"
+ 
     """
     
     def __init__(
@@ -164,7 +162,7 @@ class PCENExtractor(nn.Module):
         fmin: float = 50.0,
         fmax: Optional[float] = None,
         # PCEN parameters
-        time_constant_s: float = 0.06,  # Smoothing time constant T
+        time_constant_s: float = 0.06,  #
         alpha: float = 0.98,
         delta: float = 2.0,
         r: float = 0.5,
@@ -181,7 +179,7 @@ class PCENExtractor(nn.Module):
             n_mels=n_mels,
             f_min=fmin,
             f_max=fmax,
-            power=1.0,  # PCEN typically works on magnitude, not power
+            power=1.0,  
         )
         
         self.log_mel = LogMelExtractor(
@@ -242,21 +240,12 @@ class PCENExtractor(nn.Module):
         mel = self.mel_spec(waveform.squeeze(1))  # [batch, n_mels, time]
         
         # PCEN
-        # 1. Temporal Integration (Smoothing)
-        # M[t] = (1-s)M[t-1] + sE[t]
-        # We can implementation this with lfilter or loop (slow) or cumsum (unstable?)
-        # For batch processing, torchaudio does not have built-in PCEN yet?
-        # Let's use a simple loop over time, it's fast enough for audio lengths we have.
         
         device = mel.device
         dtype = mel.dtype
         
         # Apply recurrence (single pole IIR low-pass)
-        # Not vectorized over time...
-        # Using cumprod?
-        # M_t = s * (E_t + (1-s)E_{t-1} + ...)
         
-        # Use Python loop for now, optimizing if needed
         batch_size, n_mels, time_steps = mel.shape
         M = torch.zeros_like(mel)
         m_prev = torch.zeros(batch_size, n_mels, device=device, dtype=dtype)
@@ -275,9 +264,6 @@ class PCENExtractor(nn.Module):
             m_prev = current_m
             
         M = torch.stack(M_t_list).permute(1, 2, 0) # [batch, n_mels, time]
-        
-        # 2. Adaptive Gain Control (AGC)
-        # PCEN = (E / (M + eps)^r + delta)^alpha - delta^alpha
         
         smooth = (M + self.eps).pow(self.r)
         pcen = (mel / smooth + self.delta).pow(self.alpha) - self.delta**self.alpha

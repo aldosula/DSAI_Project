@@ -55,7 +55,6 @@ def extract_and_save(
         pcen_list = []
         
         # Process in chunks using partial loading
-        # We loop by time to handle resampling correctly via load_audio_segment
         for start_s in np.arange(0, total_duration_s, chunk_duration_s):
             end_s = min(start_s + chunk_duration_s, total_duration_s)
             

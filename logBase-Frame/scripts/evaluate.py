@@ -197,17 +197,43 @@ def main():
     # Compute macro average
     if results_per_file:
         df_res = pd.DataFrame(results_per_file)
-        macro_f1 = df_res["f1"].mean()
+        
+        # Macro average (average of per-file metrics)
         macro_p = df_res["precision"].mean()
         macro_r = df_res["recall"].mean()
+        macro_f1 = df_res["f1"].mean()
         
-        print("\n" + "="*60)
-        print("MACRO-AVERAGE RESULTS (per file)")
-        print("="*60)
-        print(f"Precision: {macro_p:.4f}")
-        print(f"Recall:    {macro_r:.4f}")
-        print(f"F1-Score:  {macro_f1:.4f}")
-        print("="*60)
+        # Micro average (pooled TP/FP/FN)
+        total_tp = df_res["tp"].sum()
+        total_fp = df_res["fp"].sum()
+        total_fn = df_res["fn"].sum()
+        
+        micro_p = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0
+        micro_r = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0
+        micro_f1 = 2 * micro_p * micro_r / (micro_p + micro_r) if (micro_p + micro_r) > 0 else 0
+        
+        # Print per-file table
+        print("\n" + "="*80)
+        print("PER-FILE RESULTS")
+        print("="*80)
+        print(f"{'File':<40} {'P':>8} {'R':>8} {'F1':>8} {'TP':>5} {'FP':>5} {'FN':>5}")
+        print("-"*80)
+        for _, row in df_res.iterrows():
+            print(f"{row['filename']:<40} {row['precision']:>8.3f} {row['recall']:>8.3f} {row['f1']:>8.3f} {int(row['tp']):>5} {int(row['fp']):>5} {int(row['fn']):>5}")
+        print("-"*80)
+        
+        # Print averages
+        print("\n" + "="*80)
+        print("AGGREGATE RESULTS")
+        print("="*80)
+        print(f"{'Metric':<20} {'Macro-Avg':>12} {'Micro-Avg':>12}")
+        print("-"*44)
+        print(f"{'Precision':<20} {macro_p:>12.4f} {micro_p:>12.4f}")
+        print(f"{'Recall':<20} {macro_r:>12.4f} {micro_r:>12.4f}")
+        print(f"{'F-Measure':<20} {macro_f1:>12.4f} {micro_f1:>12.4f}")
+        print("-"*44)
+        print(f"Total: TP={total_tp}, FP={total_fp}, FN={total_fn}")
+        print("="*80)
         
         # Save results
         out_csv = pred_dir / "evaluation_results.csv"

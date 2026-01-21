@@ -1,6 +1,5 @@
 # FSBED: Few-Shot Bioacoustic Event Detection
 
-Production-quality implementation for DCASE 2024 Task 5.
 
 ## Installation
 
